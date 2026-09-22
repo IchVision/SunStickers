@@ -1,23 +1,44 @@
 import 'package:flutter/material.dart';
 
 import '../../data/_data.dart';
+import '../../states/sticker_store.dart';
 import '../_ui.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({
+    super.key,
+    required this.store,
+  });
+
+  final StickerStore store;
 
   @override
   State<HomeScreen> createState() => HomeScreenState();
 }
 
 class HomeScreenState extends State<HomeScreen> {
-  final List<Widget> screens = [StickerList(), CartScreen(), FavoriteScreen(), const ProfileScreen()];
+  late final List<Widget> screens;
+
   int currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    screens = [
+      StickerList(store: widget.store),
+      CartScreen(store: widget.store),
+      FavoriteScreen(store: widget.store),
+      const ProfileScreen(),
+    ];
+  }
 
   void onTabTap(int index) {
     if (currentIndex == index) return;
-    currentIndex = index;
-    setState(() {});
+
+    setState(() {
+      currentIndex = index;
+    });
   }
 
   @override

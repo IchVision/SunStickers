@@ -1,22 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 
 import '../../data/_data.dart';
+import '../../states/sticker_store.dart';
 import '../../ui_kit/_ui_kit.dart';
 import '../_ui.dart';
 
 class FavoriteScreen extends StatelessWidget {
-  FavoriteScreen({super.key});
-  var favoriteItems = AppData.favoriteItems;
+  const FavoriteScreen({
+    super.key,
+    required this.store,
+  });
+
+  final StickerStore store;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _appBar(context),
-      body: EmptyWrapper(
-        type: EmptyWrapperType.favorite,
-        title: "Empty favorite",
-        isEmpty: favoriteItems.isEmpty,
-        child: _favoriteListView(context),
+      body: Observer(
+        builder: (_) {
+          final favoriteItems = store.favorite;
+
+          return EmptyWrapper(
+            type: EmptyWrapperType.favorite,
+            title: "Empty favorite",
+            isEmpty: favoriteItems.isEmpty,
+            child: _favoriteListView(
+              context,
+              favoriteItems,
+            ),
+          );
+        },
       ),
     );
   }
@@ -30,14 +45,20 @@ class FavoriteScreen extends StatelessWidget {
     );
   }
 
-  Widget _favoriteListView(BuildContext context) {
+  Widget _favoriteListView(
+    BuildContext context,
+    List<Sticker> favoriteItems,
+  ) {
     return ListView.separated(
       padding: const EdgeInsets.all(30),
       itemCount: favoriteItems.length,
       itemBuilder: (_, index) {
-        Sticker sticker = favoriteItems[index];
+        final sticker = favoriteItems[index];
+
         return Card(
-          color: Theme.of(context).brightness == Brightness.light ? Colors.white : AppColor.dark,
+          color: Theme.of(context).brightness == Brightness.light
+              ? Colors.white
+              : AppColor.dark,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15.0),
           ),
@@ -52,13 +73,16 @@ class FavoriteScreen extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
-            trailing: const Icon(AppIcon.heart, color: Colors.redAccent),
+            trailing: const Icon(
+              AppIcon.heart,
+              color: Colors.redAccent,
+            ),
           ),
         );
       },
-      separatorBuilder: (_, __) => Container(
-        height: 20,
-      ),
+      separatorBuilder: (_, __) {
+        return const SizedBox(height: 20);
+      },
     );
   }
 }

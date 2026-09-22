@@ -1,25 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import '../../data/_data.dart';
+import '../../states/sticker_store.dart';
 import '../../ui_kit/_ui_kit.dart';
 import '../_ui.dart';
 
 class CartScreen extends StatelessWidget {
-  CartScreen({super.key});
-  var cartItems = AppData.cartItems;
-  double taxes = 5.0;
+  const CartScreen({
+    super.key,
+    required this.store,
+  });
+
+  final StickerStore store;
+
+  static const double taxes = 5.0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _appBar(context),
-      body: EmptyWrapper(
-        title: "Empty cart",
-        isEmpty: cartItems.isEmpty,
-        child: _cartListView(context),
+      body: Observer(
+        builder: (_) {
+          final cartItems = store.cart;
+
+          return EmptyWrapper(
+            title: "Empty cart",
+            isEmpty: cartItems.isEmpty,
+            child: _cartListView(context, cartItems),
+          );
+        },
       ),
-      bottomNavigationBar: cartItems.isEmpty? const SizedBox.shrink() : _bottomAppBar(context),
+      bottomNavigationBar: Observer(
+        builder: (_) {
+          if (store.cart.isEmpty) {
+            return const SizedBox.shrink();
+          }
+
+          return _bottomAppBar(context);
+        },
+      ),
     );
   }
 
@@ -32,20 +52,24 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  Widget _cartListView(BuildContext context) {
+  Widget _cartListView(
+    BuildContext context,
+    List cartItems,
+  ) {
     return ListView.separated(
       padding: const EdgeInsets.all(30),
       itemCount: cartItems.length,
       itemBuilder: (_, index) {
         final sticker = cartItems[index];
+
         return Dismissible(
           direction: DismissDirection.endToStart,
           onDismissed: (direction) {
             if (direction == DismissDirection.endToStart) {
-              print('Удаляем');
+              store.onRemoveFromCartTap(sticker);
             }
           },
-          key: UniqueKey(),
+          key: ValueKey(sticker.id),
           background: Row(
             children: [
               Container(
@@ -57,7 +81,9 @@ class CartScreen extends StatelessWidget {
                   color: Colors.redAccent,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: const FaIcon(FontAwesomeIcons.trash),
+                child: const FaIcon(
+                  FontAwesomeIcons.trash,
+                ),
               ),
             ],
           ),
@@ -66,13 +92,18 @@ class CartScreen extends StatelessWidget {
             padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(15),
-              color: Theme.of(context).brightness == Brightness.dark ? AppColor.dark : Colors.white,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColor.dark
+                  : Colors.white,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 const SizedBox(width: 20),
-                Image.asset(sticker.image, scale: 10),
+                Image.asset(
+                  sticker.image,
+                  scale: 10,
+                ),
                 const SizedBox(width: 20),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,34 +122,46 @@ class CartScreen extends StatelessWidget {
                 const Spacer(),
                 Column(
                   children: [
-                    CounterButton(
-                      onIncrementTap: () {
-                        print('Увеличить количество');
+                    Observer(
+                      builder: (_) {
+                        return CounterButton(
+                          onIncrementTap: () {
+                            store.onIncreaseQuantityTap(sticker);
+                          },
+                          onDecrementTap: () {
+                            store.onDecreaseQuantityTap(sticker);
+                          },
+                          size: const Size(24, 24),
+                          padding: 0,
+                          label: Text(
+                            sticker.quantity.toString(),
+                            style: Theme.of(context).textTheme.displayMedium,
+                          ),
+                        );
                       },
-                      onDecrementTap: () {
-                        print('Уменьшить количество');
-                      },
-                      size: const Size(24, 24),
-                      padding: 0,
-                      label: Text(
-                        sticker.quantity.toString(),
-                        style: Theme.of(context).textTheme.displayMedium,
-                      ),
                     ),
-                    Text(
-                      "\$10",
-                      style: AppTextStyle.h2Style.copyWith(color: AppColor.accent),
-                    )
+                    Observer(
+                      builder: (_) {
+                        return Text(
+                          "\$${store.stickerPrice(sticker)}",
+                          style: AppTextStyle.h2Style.copyWith(
+                            color: AppColor.accent,
+                          ),
+                        );
+                      },
+                    ),
                   ],
-                )
+                ),
               ],
             ),
           ),
         );
       },
-      separatorBuilder: (_, __) => Container(
-        height: 20,
-      ),
+      separatorBuilder: (_, __) {
+        return Container(
+          height: 20,
+        );
+      },
     );
   }
 
@@ -129,87 +172,109 @@ class CartScreen extends StatelessWidget {
         topRight: Radius.circular(30),
       ),
       child: BottomAppBar(
-          child: SizedBox(
-              height: 250,
-              child: Container(
-                color: Theme.of(context).brightness == Brightness.dark ? AppColor.dark : Colors.white,
-                child: Padding(
-                  padding: const EdgeInsets.all(30),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Subtotal",
-                                style: Theme.of(context).textTheme.headlineSmall,
-                              ),
-                              Text(
-                                "\$111",
-                                style: Theme.of(context).textTheme.displayMedium,
-                              ),
-                            ],
+        child: SizedBox(
+          height: 250,
+          child: Container(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColor.dark
+                : Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.all(30),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Subtotal",
+                            style: Theme.of(context).textTheme.headlineSmall,
                           ),
-                        ),
-                        const SizedBox(height: 15),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Taxes",
-                                style: Theme.of(context).textTheme.headlineSmall,
-                              ),
-                              Text(
-                                "\$${taxes}",
-                                style: Theme.of(context).textTheme.displayMedium,
-                              ),
-                            ],
+                          Observer(
+                            builder: (_) {
+                              return Text(
+                                "\$${store.subtotal}",
+                                style:
+                                    Theme.of(context).textTheme.displayMedium,
+                              );
+                            },
                           ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          child: Divider(thickness: 4.0, height: 30.0),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Total",
-                                style: Theme.of(context).textTheme.displayMedium,
-                              ),
-                              Text(
-                                "\$120.0",
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Taxes",
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          Text(
+                            "\$$taxes",
+                            style: Theme.of(context).textTheme.displayMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Divider(
+                        thickness: 4.0,
+                        height: 30.0,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Total",
+                            style: Theme.of(context).textTheme.displayMedium,
+                          ),
+                          Observer(
+                            builder: (_) {
+                              final total = store.subtotal + taxes;
+
+                              return Text(
+                                "\$$total",
                                 style: AppTextStyle.h2Style.copyWith(
                                   color: AppColor.accent,
                                 ),
-                              ),
-                            ],
+                              );
+                            },
                           ),
-                        ),
-                        const SizedBox(height: 30),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 45,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 30),
-                            child: ElevatedButton(
-                              onPressed: () {},
-                              child: const Text("Checkout"),
-                            ),
-                          ),
-                        )
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 30),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 45,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 30,
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            store.onCheckOutTap();
+                          },
+                          child: const Text("Checkout"),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ))),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

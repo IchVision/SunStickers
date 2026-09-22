@@ -1,22 +1,35 @@
 import 'package:flutter/material.dart';
 
+import 'states/sticker_store.dart';
 import 'ui/_ui.dart';
 import 'ui_kit/_ui_kit.dart';
 
 void main() {
-  runApp(const MyApp());
+  final store = StickerStore();
+
+  runApp(
+    MyApp(
+      store: store,
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({
+    super.key,
+    required this.store,
+  });
 
-  // This widget is the root of your application.
+  final StickerStore store;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Sunny Stickers',
       theme: AppTheme.darkTheme,
-      home: const HomeScreen(),
+      home: HomeScreen(
+        store: store,
+      ),
     );
   }
 }

@@ -1,145 +1,164 @@
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart' hide Badge;
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:sun_stickers/ui/_ui.dart';
 
-import '../../data/_data.dart';
+import '../../states/sticker_store.dart';
 import '../../ui_kit/_ui_kit.dart';
+import '../_ui.dart';
 
 class StickerList extends StatelessWidget {
-  StickerList({super.key});
-  var categories = AppData.categories;
+  const StickerList({
+    super.key,
+    required this.store,
+  });
 
+  final StickerStore store;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: _appBar(context),
-        body: Padding(
-          padding: const EdgeInsets.all(20),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Morning, Sunny",
-                  style: Theme.of(context).textTheme.headlineSmall,
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: _appBar(context),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Morning, Sunny",
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              Text(
+                "What sticker do you want\nto buy today",
+                style: Theme.of(context).textTheme.displayLarge,
+              ),
+              _searchBar(),
+              Text(
+                "Available for you",
+                style: Theme.of(context).textTheme.displaySmall,
+              ),
+              Observer(
+                builder: (_) {
+                  return _categories(
+                    context,
+                    store.categories,
+                  );
+                },
+              ),
+              Observer(
+                builder: (_) {
+                  return StickerListView(
+                    stickers: store.stickersByCategory,
+                    store: store,
+                  );
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: 30,
+                  bottom: 15,
                 ),
-                Text(
-                  "What sticker do you want\nto buy today",
-                  style: Theme.of(context).textTheme.displayLarge,
-                ),
-                _searchBar(),
-                Text(
-                  "Available for you",
+                child: Text(
+                  "Best stickers of the week",
                   style: Theme.of(context).textTheme.displaySmall,
                 ),
-                _categories(context),
-                StickerListView(stickers: AppData.stickers),
-                Padding(
-                  padding: const EdgeInsets.only(top: 25, bottom: 5),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Best stickers of the week",
-                        style: Theme.of(context).textTheme.displaySmall,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 20),
-                        child: Text(
-                          "See all",
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: AppColor.accent),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                StickerListView(
-                  stickers: AppData.stickers,
-                  isReversed: true,
-                ),
-              ],
-            ),
+              ),
+              Observer(
+                builder: (_) {
+                  return StickerListView(
+                    stickers: store.stickers,
+                    isReversed: true,
+                    store: store,
+                  );
+                },
+              ),
+            ],
           ),
         ),
-      );
+      ),
+    );
+  }
 
   PreferredSizeWidget _appBar(BuildContext context) {
     return AppBar(
-      leading: IconButton(
-        icon: const FaIcon(FontAwesomeIcons.dice),
-        onPressed: () {},
-      ),
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.location_on_outlined, color: AppColor.accent),
-          Text(
-            "Location",
-            style: Theme.of(context).textTheme.bodyLarge,
-          )
-        ],
+      title: Text(
+        "Sunny Stickers",
+        style: Theme.of(context).textTheme.displayMedium,
       ),
       actions: [
-        IconButton(
-          onPressed: () {},
-          icon: Badge(
-            badgeStyle: const BadgeStyle(badgeColor: AppColor.accent),
-            badgeContent: const Text(
-              "2",
-              style: TextStyle(color: Colors.white),
+        Badge(
+          position: BadgePosition.topEnd(top: 0, end: 0),
+          badgeContent: const Text(
+            "0",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 10,
             ),
-            position: BadgePosition.topStart(start: -3),
-            child: const Icon(Icons.notifications_none, size: 30),
           ),
-        )
+          child: IconButton(
+            onPressed: () {},
+            icon: const FaIcon(
+              FontAwesomeIcons.bagShopping,
+            ),
+          ),
+        ),
       ],
     );
   }
 
   Widget _searchBar() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
       child: TextField(
         decoration: InputDecoration(
-          hintText: 'Search sticker',
-          prefixIcon: Icon(Icons.search, color: Colors.grey),
+          hintText: "Search sticker",
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.tune),
+          ),
         ),
       ),
     );
   }
 
-  Widget _categories(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8.0),
-      child: SizedBox(
-        height: 40,
-        child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemBuilder: (_, index) {
-              final category = categories[index];
-              return GestureDetector(
-                onTap: () {},
-                child: Container(
-                  width: 100,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: category.isSelected ? AppColor.accent : Colors.transparent,
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(15),
-                    ),
-                  ),
-                  child: Text(
-                    category.type.name.firstCapital,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                ),
-              );
+  Widget _categories(
+    BuildContext context,
+    List categories,
+  ) {
+    return SizedBox(
+      height: 50,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: categories.length,
+        itemBuilder: (_, index) {
+          final category = categories[index];
+
+          return GestureDetector(
+            onTap: () {
+              store.onCategoryTap(category);
             },
-            separatorBuilder: (_, __) => Container(
-                  width: 15,
-                ),
-            itemCount: categories.length),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 10,
+              ),
+              decoration: BoxDecoration(
+                color:
+                    category.isSelected ? AppColor.accent : Colors.transparent,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Text(
+                category.type.toString().split('.').last,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+          );
+        },
+        separatorBuilder: (_, __) {
+          return const SizedBox(width: 10);
+        },
       ),
     );
   }
