@@ -1,47 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../data/_data.dart';
 import '../_ui.dart';
+import '../../states/sticker_controller.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+class HomeScreen extends GetView<StickerController> {
+  HomeScreen({super.key});
 
-  @override
-  State<HomeScreen> createState() => HomeScreenState();
-}
+  final currentIndex = 0.obs;
 
-class HomeScreenState extends State<HomeScreen> {
-  final List<Widget> screens = [StickerList(), CartScreen(), FavoriteScreen(), const ProfileScreen()];
-  int currentIndex = 0;
+  final List<Widget> screens = [
+    const StickerList(),
+    const CartScreen(),
+    const FavoriteScreen(),
+    const ProfileScreen(),
+  ];
 
   void onTabTap(int index) {
-    if (currentIndex == index) return;
-    currentIndex = index;
-    setState(() {});
+    if (currentIndex.value == index) return;
+    currentIndex.value = index;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: IndexedStack(
-          index: currentIndex,
-          children: screens,
+    return Obx(
+      () => Scaffold(
+        body: SafeArea(
+          child: IndexedStack(
+            index: currentIndex.value,
+            children: screens,
+          ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: onTabTap,
-        selectedFontSize: 0,
-        items: AppData.bottomNavigationItems.map(
-          (element) {
-            return BottomNavigationBarItem(
-              icon: element.disableIcon,
-              label: element.label,
-              activeIcon: element.enableIcon,
-            );
-          },
-        ).toList(),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: currentIndex.value,
+          onTap: onTabTap,
+          selectedFontSize: 0,
+          items: AppData.bottomNavigationItems.map(
+            (element) {
+              return BottomNavigationBarItem(
+                icon: element.disableIcon,
+                label: element.label,
+                activeIcon: element.enableIcon,
+              );
+            },
+          ).toList(),
+        ),
       ),
     );
   }

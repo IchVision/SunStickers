@@ -5,7 +5,8 @@ import '../../ui_kit/_ui_kit.dart';
 import '../_ui.dart';
 
 class StickerListView extends StatelessWidget {
-  const StickerListView({super.key, required this.stickers, this.isReversed = false});
+  const StickerListView(
+      {super.key, required this.stickers, this.isReversed = false});
 
   final List<Sticker> stickers;
   final bool isReversed;
@@ -19,11 +20,13 @@ class StickerListView extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.only(top: 20),
           itemBuilder: (_, index) {
-            Sticker sticker = isReversed ? stickers.reversed.toList()[index] : stickers[index];
+            Sticker sticker = isReversed
+                ? stickers.reversed.toList()[index]
+                : stickers[index];
             return GestureDetector(
               onTap: () {
-                print('Клик на карточку');
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => StickerDetail()));
+                Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const StickerDetail()));
               },
               child: Container(
                 width: 160,
@@ -40,11 +43,15 @@ class StickerListView extends StatelessWidget {
                       Image.asset(sticker.image, scale: 6),
                       Text(
                         "\$${sticker.price}",
-                        style: AppTextStyle.h3Style.copyWith(color: AppColor.accent),
+                        style: AppTextStyle.h3Style
+                            .copyWith(color: AppColor.accent),
                       ),
                       Text(
                         sticker.name,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
