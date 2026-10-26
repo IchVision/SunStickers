@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../states/_states.dart';
 import '../../ui_kit/_ui_kit.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -18,6 +20,21 @@ class ProfileScreen extends StatelessWidget {
           Text(
             "Hello Sunny!",
             style: Theme.of(context).textTheme.displayLarge,
+          ),
+          const SizedBox(height: 20),
+          BlocBuilder<StickerCubit, StickerState>(
+            buildWhen: (p, c) => p.light != c.light,
+            builder: (context, state) {
+              return SwitchListTile(
+                title: Text(
+                  state.light ? 'Light theme' : 'Dark theme',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                value: state.light,
+                onChanged: (_) =>
+                    context.read<StickerCubit>().toggleTheme(),
+              );
+            },
           ),
         ],
       ),

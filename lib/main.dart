@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'states/sticker_controller.dart';
+import 'states/_states.dart';
 import 'ui/_ui.dart';
 import 'ui_kit/_ui_kit.dart';
 
 void main() {
-  Get.put(StickerController());
-
   runApp(const MyApp());
 }
 
@@ -16,10 +14,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Sunny Stickers',
-      theme: AppTheme.darkTheme,
-      home: HomeScreen(),
+    return BlocProvider(
+      create: (_) => StickerCubit(),
+      child: BlocBuilder<StickerCubit, StickerState>(
+        buildWhen: (previous, current) => previous.light != current.light,
+        builder: (context, state) {
+          return MaterialApp(
+            title: 'Sunny Stickers',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: state.light ? ThemeMode.light : ThemeMode.dark,
+            home: const HomeScreen(),
+          );
+        },
+      ),
     );
   }
 }

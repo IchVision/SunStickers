@@ -1,44 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:get/get.dart';
 
 import '../../data/_data.dart';
+import '../../states/_states.dart';
 import '../../ui_kit/_ui_kit.dart';
 import '../_ui.dart';
-import '../../states/sticker_controller.dart';
 
-class CartScreen extends GetView<StickerController> {
+class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
-
-  static const double taxes = 5.0;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _appBar(context),
-      body: Obx(
-        () {
-          final cartItems = controller.cart;
-
-          return EmptyWrapper(
+    return BlocBuilder<StickerCubit, StickerState>(
+      builder: (context, state) {
+        final cartItems = state.cart;
+        return Scaffold(
+          appBar: _appBar(context),
+          body: EmptyWrapper(
             title: "Empty cart",
             isEmpty: cartItems.isEmpty,
-            child: _cartListView(
-              context,
-              cartItems,
-            ),
-          );
-        },
-      ),
-      bottomNavigationBar: Obx(
-        () {
-          if (controller.cart.isEmpty) {
-            return const SizedBox.shrink();
-          }
-
-          return _bottomAppBar(context);
-        },
-      ),
+            child: _cartListView(context, state, cartItems),
+          ),
+          bottomNavigationBar:
+              cartItems.isEmpty ? const SizedBox.shrink() : _bottomAppBar(context, state),
+        );
+      },
     );
   }
 
@@ -53,6 +40,7 @@ class CartScreen extends GetView<StickerController> {
 
   Widget _cartListView(
     BuildContext context,
+    StickerState state,
     List<Sticker> cartItems,
   ) {
     return ListView.separated(
@@ -60,17 +48,12 @@ class CartScreen extends GetView<StickerController> {
       itemCount: cartItems.length,
       itemBuilder: (_, index) {
         final sticker = cartItems[index];
-
         return Dismissible(
           direction: DismissDirection.endToStart,
-          key: ValueKey(sticker.name),
-          onDismissed: (direction) {
-            if (direction == DismissDirection.endToStart) {
-              controller.onRemoveFromCartTap(sticker);
-            }
-          },
+          onDismissed: (_) =>
+              context.read<StickerCubit>().onRemoveFromCartTap(sticker.id),
+          key: ValueKey('cart_${sticker.id}'),
           background: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -81,9 +64,7 @@ class CartScreen extends GetView<StickerController> {
                   color: Colors.redAccent,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: const FaIcon(
-                  FontAwesomeIcons.trash,
-                ),
+                child: const FaIcon(FontAwesomeIcons.trash),
               ),
             ],
           ),
@@ -100,10 +81,7 @@ class CartScreen extends GetView<StickerController> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 const SizedBox(width: 20),
-                Image.asset(
-                  sticker.image,
-                  scale: 10,
-                ),
+                Image.asset(sticker.image, scale: 10),
                 const SizedBox(width: 20),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,12 +101,10 @@ class CartScreen extends GetView<StickerController> {
                 Column(
                   children: [
                     CounterButton(
-                      onIncrementTap: () {
-                        controller.onIncreaseQuantityTap(sticker);
-                      },
-                      onDecrementTap: () {
-                        controller.onDecreaseQuantityTap(sticker);
-                      },
+                      onIncrementTap: () => context
+                          .read<StickerCubit>().onIncreaseQuantityTap(sticker.id),
+                      onDecrementTap: () => context
+                          .read<StickerCubit>().onDecreaseQuantityTap(sticker.id),
                       size: const Size(24, 24),
                       padding: 0,
                       label: Text(
@@ -137,28 +113,23 @@ class CartScreen extends GetView<StickerController> {
                       ),
                     ),
                     Text(
-                      "\$${controller.stickerPrice(sticker)}",
-                      style: AppTextStyle.h2Style.copyWith(
-                        color: AppColor.accent,
-                      ),
-                    ),
+                      "\$${state.stickerPrice(sticker)}",
+                      style: AppTextStyle.h2Style.copyWith(color: AppColor.accent),
+                    )
                   ],
-                ),
+                )
               ],
             ),
           ),
         );
       },
-      separatorBuilder: (_, __) {
-        return const SizedBox(height: 20);
-      },
+      separatorBuilder: (_, __) => Container(
+        height: 20,
+      ),
     );
   }
 
-  Widget _bottomAppBar(BuildContext context) {
-    final subtotal = controller.subtotal;
-    final total = subtotal + taxes;
-
+  Widget _bottomAppBar(BuildContext context, StickerState state) {
     return ClipRRect(
       borderRadius: const BorderRadius.only(
         topLeft: Radius.circular(30),
@@ -177,9 +148,7 @@ class CartScreen extends GetView<StickerController> {
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -188,7 +157,7 @@ class CartScreen extends GetView<StickerController> {
                             style: Theme.of(context).textTheme.headlineSmall,
                           ),
                           Text(
-                            "\$${subtotal.toStringAsFixed(2)}",
+                            "\$${state.subtotal.toStringAsFixed(1)}",
                             style: Theme.of(context).textTheme.displayMedium,
                           ),
                         ],
@@ -196,9 +165,7 @@ class CartScreen extends GetView<StickerController> {
                     ),
                     const SizedBox(height: 15),
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -207,25 +174,18 @@ class CartScreen extends GetView<StickerController> {
                             style: Theme.of(context).textTheme.headlineSmall,
                           ),
                           Text(
-                            "\$${taxes.toStringAsFixed(2)}",
+                            "\$${StickerState.taxes}",
                             style: Theme.of(context).textTheme.displayMedium,
                           ),
                         ],
                       ),
                     ),
                     const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 20,
-                      ),
-                      child: Divider(
-                        thickness: 4.0,
-                        height: 30.0,
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Divider(thickness: 4.0, height: 30.0),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -234,7 +194,7 @@ class CartScreen extends GetView<StickerController> {
                             style: Theme.of(context).textTheme.displayMedium,
                           ),
                           Text(
-                            "\$${total.toStringAsFixed(2)}",
+                            "\$${state.total.toStringAsFixed(1)}",
                             style: AppTextStyle.h2Style.copyWith(
                               color: AppColor.accent,
                             ),
@@ -247,15 +207,14 @@ class CartScreen extends GetView<StickerController> {
                       width: double.infinity,
                       height: 45,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 30,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 30),
                         child: ElevatedButton(
-                          onPressed: controller.onCheckOutTap,
+                          onPressed: () =>
+                              context.read<StickerCubit>().onCheckOutTap(),
                           child: const Text("Checkout"),
                         ),
                       ),
-                    ),
+                    )
                   ],
                 ),
               ),

@@ -1,38 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:get/get.dart';
 
 import '../../data/_data.dart';
-import '../../states/sticker_controller.dart';
+import '../../states/_states.dart';
 import '../../ui_kit/_ui_kit.dart';
 import '../widgets/_widgets.dart';
 
-class StickerDetail extends GetView<StickerController> {
-  const StickerDetail({super.key});
+class StickerDetail extends StatelessWidget {
+  const StickerDetail({super.key, required this.stickerId});
 
-  final int stickerIndex = 0;
+  final int stickerId;
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () {
-        final sticker = controller.stickers[stickerIndex];
-
+    return BlocBuilder<StickerCubit, StickerState>(
+      builder: (context, state) {
+        final sticker = state.getStickerById(stickerId);
         return Scaffold(
           appBar: _appBar(context),
-          body: Center(
-            child: Image.asset(
-              sticker.image,
-              scale: 2,
-            ),
+          body: Center(child: Image.asset(sticker.image, scale: 2)),
+          floatingActionButton: FloatingActionButton(
+            elevation: 0.0,
+            backgroundColor: AppColor.accent,
+            onPressed: () => context.read<StickerCubit>().onAddRemoveFavoriteTap(stickerId),
+            child: sticker.favorite
+                ? const Icon(AppIcon.heart)
+                : const Icon(AppIcon.outlinedHeart),
           ),
-          floatingActionButton: _floatingActionButton(sticker),
           floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
-          bottomNavigationBar: _bottomAppBar(
-            context,
-            sticker,
-          ),
+          bottomNavigationBar: _bottomAppBar(context, sticker),
         );
       },
     );
@@ -52,32 +50,11 @@ class StickerDetail extends GetView<StickerController> {
               : Colors.white,
         ),
       ),
-      actions: [
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.more_vert),
-        ),
-      ],
+      actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert))],
     );
   }
 
-  Widget _floatingActionButton(Sticker sticker) {
-    return FloatingActionButton(
-      elevation: 0.0,
-      backgroundColor: AppColor.accent,
-      onPressed: () {
-        controller.onAddRemoveFavoriteTap(sticker);
-      },
-      child: sticker.favorite
-          ? const Icon(AppIcon.heart)
-          : const Icon(AppIcon.outlinedHeart),
-    );
-  }
-
-  Widget _bottomAppBar(
-    BuildContext context,
-    Sticker sticker,
-  ) {
+  Widget _bottomAppBar(BuildContext context, Sticker sticker) {
     return ClipRRect(
       borderRadius: const BorderRadius.only(
         topLeft: Radius.circular(30),
@@ -111,7 +88,7 @@ class StickerDetail extends GetView<StickerController> {
                             FontAwesomeIcons.solidStar,
                             color: AppColor.yellow,
                           ),
-                          onRatingUpdate: (rating) {},
+                          onRatingUpdate: (_) {},
                         ),
                         const SizedBox(width: 15),
                         Text(
@@ -122,7 +99,7 @@ class StickerDetail extends GetView<StickerController> {
                         Text(
                           "(${sticker.voter})",
                           style: Theme.of(context).textTheme.titleMedium,
-                        ),
+                        )
                       ],
                     ),
                     const SizedBox(height: 15),
@@ -134,22 +111,18 @@ class StickerDetail extends GetView<StickerController> {
                           style: Theme.of(context)
                               .textTheme
                               .displayLarge
-                              ?.copyWith(
-                                color: AppColor.accent,
-                              ),
+                              ?.copyWith(color: AppColor.accent),
                         ),
                         CounterButton(
-                          onIncrementTap: () {
-                            controller.onIncreaseQuantityTap(sticker);
-                          },
-                          onDecrementTap: () {
-                            controller.onDecreaseQuantityTap(sticker);
-                          },
+                          onIncrementTap: () => context
+                              .read<StickerCubit>().onIncreaseQuantityTap(stickerId),
+                          onDecrementTap: () => context
+                              .read<StickerCubit>().onDecreaseQuantityTap(stickerId),
                           label: Text(
                             sticker.quantity.toString(),
                             style: Theme.of(context).textTheme.displayLarge,
                           ),
-                        ),
+                        )
                       ],
                     ),
                     const SizedBox(height: 15),
@@ -167,17 +140,14 @@ class StickerDetail extends GetView<StickerController> {
                       width: double.infinity,
                       height: 45,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 30,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 30),
                         child: ElevatedButton(
-                          onPressed: () {
-                            controller.onAddToCartTap(sticker);
-                          },
+                          onPressed: () =>
+                              context.read<StickerCubit>().onAddToCartTap(stickerId),
                           child: const Text("Add to cart"),
                         ),
                       ),
-                    ),
+                    )
                   ],
                 ),
               ),
