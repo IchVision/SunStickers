@@ -15,7 +15,7 @@ class StickerDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<StickerCubit, StickerState>(
+    return BlocBuilder<StickerBloc, StickerState>(
       builder: (context, state) {
         final sticker = state.getStickerById(stickerId);
         return Scaffold(
@@ -24,7 +24,7 @@ class StickerDetail extends StatelessWidget {
           floatingActionButton: FloatingActionButton(
             elevation: 0.0,
             backgroundColor: AppColor.accent,
-            onPressed: () => context.read<StickerCubit>().onAddRemoveFavoriteTap(stickerId),
+            onPressed: () => context.read<StickerBloc>().add(StickerFavoriteToggled(stickerId)),
             child: sticker.favorite
                 ? const Icon(AppIcon.heart)
                 : const Icon(AppIcon.outlinedHeart),
@@ -115,9 +115,9 @@ class StickerDetail extends StatelessWidget {
                         ),
                         CounterButton(
                           onIncrementTap: () => context
-                              .read<StickerCubit>().onIncreaseQuantityTap(stickerId),
+                              .read<StickerBloc>().add(StickerQuantityIncreased(stickerId)),
                           onDecrementTap: () => context
-                              .read<StickerCubit>().onDecreaseQuantityTap(stickerId),
+                              .read<StickerBloc>().add(StickerQuantityDecreased(stickerId)),
                           label: Text(
                             sticker.quantity.toString(),
                             style: Theme.of(context).textTheme.displayLarge,
@@ -143,7 +143,7 @@ class StickerDetail extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 30),
                         child: ElevatedButton(
                           onPressed: () =>
-                              context.read<StickerCubit>().onAddToCartTap(stickerId),
+                              context.read<StickerBloc>().add(StickerAddedToCart(stickerId)),
                           child: const Text("Add to cart"),
                         ),
                       ),

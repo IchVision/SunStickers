@@ -15,8 +15,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => StickerCubit(),
-      child: BlocBuilder<StickerCubit, StickerState>(
+      create: (_) => StickerBloc(),
+      child: BlocBuilder<StickerBloc, StickerState>(
         buildWhen: (previous, current) => previous.light != current.light,
         builder: (context, state) {
           return MaterialApp(

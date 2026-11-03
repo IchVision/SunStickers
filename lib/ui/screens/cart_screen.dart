@@ -12,7 +12,7 @@ class CartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<StickerCubit, StickerState>(
+    return BlocBuilder<StickerBloc, StickerState>(
       builder: (context, state) {
         final cartItems = state.cart;
         return Scaffold(
@@ -51,7 +51,7 @@ class CartScreen extends StatelessWidget {
         return Dismissible(
           direction: DismissDirection.endToStart,
           onDismissed: (_) =>
-              context.read<StickerCubit>().onRemoveFromCartTap(sticker.id),
+              context.read<StickerBloc>().add(StickerRemovedFromCart(sticker.id)),
           key: ValueKey('cart_${sticker.id}'),
           background: Row(
             children: [
@@ -102,9 +102,9 @@ class CartScreen extends StatelessWidget {
                   children: [
                     CounterButton(
                       onIncrementTap: () => context
-                          .read<StickerCubit>().onIncreaseQuantityTap(sticker.id),
+                          .read<StickerBloc>().add(StickerQuantityIncreased(sticker.id)),
                       onDecrementTap: () => context
-                          .read<StickerCubit>().onDecreaseQuantityTap(sticker.id),
+                          .read<StickerBloc>().add(StickerQuantityDecreased(sticker.id)),
                       size: const Size(24, 24),
                       padding: 0,
                       label: Text(
@@ -210,7 +210,7 @@ class CartScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 30),
                         child: ElevatedButton(
                           onPressed: () =>
-                              context.read<StickerCubit>().onCheckOutTap(),
+                              context.read<StickerBloc>().add(CartCheckedOut()),
                           child: const Text("Checkout"),
                         ),
                       ),

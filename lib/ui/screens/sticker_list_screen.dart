@@ -34,7 +34,7 @@ class StickerList extends StatelessWidget {
                 style: Theme.of(context).textTheme.displaySmall,
               ),
               _categories(context),
-              BlocBuilder<StickerCubit, StickerState>(
+              BlocBuilder<StickerBloc, StickerState>(
                 buildWhen: (p, c) => p.stickersByCategory != c.stickersByCategory,
                 builder: (context, state) {
                   return StickerListView(stickers: state.stickersByCategory);
@@ -62,7 +62,7 @@ class StickerList extends StatelessWidget {
                   ],
                 ),
               ),
-              BlocBuilder<StickerCubit, StickerState>(
+              BlocBuilder<StickerBloc, StickerState>(
                 buildWhen: (p, c) => p.stickersByCategory != c.stickersByCategory,
                 builder: (context, state) {
                   return StickerListView(
@@ -82,7 +82,7 @@ class StickerList extends StatelessWidget {
     return AppBar(
       leading: IconButton(
         icon: const FaIcon(FontAwesomeIcons.dice),
-        onPressed: () => context.read<StickerCubit>().toggleTheme(),
+        onPressed: () => context.read<StickerBloc>().add(const ThemeToggled()),
       ),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -128,7 +128,7 @@ class StickerList extends StatelessWidget {
       padding: const EdgeInsets.only(top: 8.0),
       child: SizedBox(
         height: 40,
-        child: BlocBuilder<StickerCubit, StickerState>(
+        child: BlocBuilder<StickerBloc, StickerState>(
           buildWhen: (p, c) => p.categories != c.categories,
           builder: (context, state) {
             return ListView.separated(
@@ -136,7 +136,7 @@ class StickerList extends StatelessWidget {
               itemBuilder: (_, index) {
                 final category = state.categories[index];
                 return GestureDetector(
-                  onTap: () => context.read<StickerCubit>().onCategoryTap(category),
+                  onTap: () => context.read<StickerBloc>().add(StickerCategorySelected(category)),
                   child: Container(
                     width: 100,
                     alignment: Alignment.center,

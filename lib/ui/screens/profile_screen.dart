@@ -22,7 +22,7 @@ class ProfileScreen extends StatelessWidget {
             style: Theme.of(context).textTheme.displayLarge,
           ),
           const SizedBox(height: 20),
-          BlocBuilder<StickerCubit, StickerState>(
+          BlocBuilder<StickerBloc, StickerState>(
             buildWhen: (p, c) => p.light != c.light,
             builder: (context, state) {
               return SwitchListTile(
@@ -32,7 +32,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 value: state.light,
                 onChanged: (_) =>
-                    context.read<StickerCubit>().toggleTheme(),
+                    context.read<StickerBloc>().add(const ThemeToggled()),
               );
             },
           ),

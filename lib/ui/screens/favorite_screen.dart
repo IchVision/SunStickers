@@ -13,7 +13,7 @@ class FavoriteScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _appBar(context),
-      body: BlocBuilder<StickerCubit, StickerState>(
+      body: BlocBuilder<StickerBloc, StickerState>(
         buildWhen: (p, c) => p.favorite != c.favorite,
         builder: (context, state) {
           return EmptyWrapper(
@@ -63,7 +63,7 @@ class FavoriteScreen extends StatelessWidget {
             trailing: IconButton(
               icon: const Icon(AppIcon.heart, color: Colors.redAccent),
               onPressed: () =>
-                  context.read<StickerCubit>().onAddRemoveFavoriteTap(sticker.id),
+                  context.read<StickerBloc>().add(StickerFavoriteToggled(sticker.id)),
             ),
           ),
         );
