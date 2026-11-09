@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_redux/flutter_redux.dart';
+import 'package:provider/provider.dart';
 
 import '../../states/_states.dart';
 import '../../ui_kit/_ui_kit.dart';
@@ -22,18 +22,15 @@ class ProfileScreen extends StatelessWidget {
             style: Theme.of(context).textTheme.displayLarge,
           ),
           const SizedBox(height: 20),
-          StoreConnector<StickerState, bool>(
-            distinct: true,
-            converter: (store) => store.state.light,
-            builder: (context, light) {
+          Consumer<StickerProvider>(
+            builder: (context, provider, _) {
               return SwitchListTile(
                 title: Text(
-                  light ? 'Light theme' : 'Dark theme',
+                  provider.light ? 'Light theme' : 'Dark theme',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
-                value: light,
-                onChanged: (_) => StoreProvider.of<StickerState>(context)
-                    .dispatch(const ThemeToggledAction()),
+                value: provider.light,
+                onChanged: (_) => provider.toggleTheme(),
               );
             },
           ),

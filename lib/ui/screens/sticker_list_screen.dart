@@ -1,9 +1,8 @@
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart' hide Badge;
-import 'package:flutter_redux/flutter_redux.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 
-import '../../data/_data.dart';
 import '../../states/_states.dart';
 import '../../ui_kit/_ui_kit.dart';
 import '../_ui.dart';
@@ -35,11 +34,9 @@ class StickerList extends StatelessWidget {
                 style: Theme.of(context).textTheme.displaySmall,
               ),
               _categories(context),
-              StoreConnector<StickerState, List<Sticker>>(
-                distinct: true,
-                converter: (store) => store.state.stickersByCategory,
-                builder: (context, stickers) {
-                  return StickerListView(stickers: stickers);
+              Consumer<StickerProvider>(
+                builder: (context, provider, _) {
+                  return StickerListView(stickers: provider.stickersByCategory);
                 },
               ),
               Padding(
@@ -64,12 +61,10 @@ class StickerList extends StatelessWidget {
                   ],
                 ),
               ),
-              StoreConnector<StickerState, List<Sticker>>(
-                distinct: true,
-                converter: (store) => store.state.stickersByCategory,
-                builder: (context, stickers) {
+              Consumer<StickerProvider>(
+                builder: (context, provider, _) {
                   return StickerListView(
-                    stickers: stickers,
+                    stickers: provider.stickersByCategory,
                     isReversed: true,
                   );
                 },
@@ -85,8 +80,7 @@ class StickerList extends StatelessWidget {
     return AppBar(
       leading: IconButton(
         icon: const FaIcon(FontAwesomeIcons.dice),
-        onPressed: () => StoreProvider.of<StickerState>(context)
-            .dispatch(const ThemeToggledAction()),
+        onPressed: () => context.read<StickerProvider>().toggleTheme(),
       ),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -132,17 +126,14 @@ class StickerList extends StatelessWidget {
       padding: const EdgeInsets.only(top: 8.0),
       child: SizedBox(
         height: 40,
-        child: StoreConnector<StickerState, List<StickerCategory>>(
-          distinct: true,
-          converter: (store) => store.state.categories,
-          builder: (context, categories) {
+        child: Consumer<StickerProvider>(
+          builder: (context, provider, _) {
             return ListView.separated(
               scrollDirection: Axis.horizontal,
               itemBuilder: (_, index) {
-                final category = categories[index];
+                final category = provider.categories[index];
                 return GestureDetector(
-                  onTap: () => StoreProvider.of<StickerState>(context)
-                      .dispatch(CategoryTappedAction(category)),
+                  onTap: () => provider.onCategoryTap(category),
                   child: Container(
                     width: 100,
                     alignment: Alignment.center,
@@ -162,7 +153,7 @@ class StickerList extends StatelessWidget {
               separatorBuilder: (_, __) => Container(
                 width: 15,
               ),
-              itemCount: categories.length,
+              itemCount: provider.categories.length,
             );
           },
         ),
